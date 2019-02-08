@@ -6,7 +6,7 @@ There are a lot of good Spotify + menu bar projects that already exist, but many
 
 Easily see at a glance what song is playing. Click in to see more details.
 
-I find myself sharing a lot of music via spotify uris.  In the menu bar you can easily add that uri to your clipboard for easy sending.
+I find myself sharing a lot of music via spotify uris.  In the menu bar you can add that uri to your clipboard for easy sending.
 
 ![photo](./live.png)
 
