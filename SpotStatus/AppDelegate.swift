@@ -45,6 +45,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var url: String!
     var out: NSAppleEventDescriptor?
     
+    var preferences: Preferences!
+    
     
     // Used to place something onto the user's clipboard
     @objc func shareToClipboard(_ sender: Any?) {
@@ -63,15 +65,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func constructMenu() {
         let menu = NSMenu()
         
-        // If there's no spotify running
-        if (songName == "") {
-            return
-        }
-        
-        menu.addItem(NSMenuItem(title: moreDetail, action: Selector(""), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Share (song to clipboard)", action: #selector(AppDelegate.shareToClipboard(_:)), keyEquivalent: "P"))
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Preferences", action: #selector(showPrefs(_:)), keyEquivalent: "m"))
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        
+        // If there's no spotify running
+        if (songName != "") {
+            menu.insertItem(NSMenuItem(title: moreDetail, action: Selector(""), keyEquivalent: ""),at: 0)
+            menu.insertItem(NSMenuItem(title: "Share - Song To Clipboard", action: #selector(AppDelegate.shareToClipboard(_:)), keyEquivalent: "P"), at: 1)
+
+        }
         
         statusItem.menu = menu
     }
@@ -88,9 +91,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // If we don't have a song, abort this round!
             // Else place it into the button
             
+            let defaults = UserDefaults.standard
+            let displayName = defaults.string(forKey: "displayName") ?? "Click To Configure..."
+            
             if let button = statusItem.button {
-                button.image = songName == "" ? NSImage(named:NSImage.Name("StatusBarButtonImage")) : nil
-                button.title = songName
+//                button.title = songName
+                button.title = songName == "" ? displayName : songName
                 button.action = #selector(shareToClipboard(_:))
             }
             
@@ -138,9 +144,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         url = "https://open.spotify.com/track/" + splitUrl[2]
     }
     
+    @objc func showPrefs(_ sender: NSMenuItem) {
+        //Here I call the title of the Menu Item pressed
+        preferences.showWindow(nil)
+
+    }
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         reloadSong()
+        preferences = Preferences()
+        constructMenu()
+        
+
         
         var refreshTimer = Timer.scheduledTimer(timeInterval: 2.0, target: self, selector: #selector(AppDelegate.reloadSong), userInfo: nil, repeats: true)
         
