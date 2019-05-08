@@ -125,8 +125,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     showTitleOrArtist = .artist
                     switchCount = 0
                 }
-                menuText = cleanSongTitle ? doCleanSongTitle(songName) : songName
             }
+            menuText = cleanSongTitle ? doCleanSongTitle(songName) : songName
         } else {
             // get the artist name
             showTitleOrArtist = .title
