@@ -12,3 +12,14 @@ I find myself sharing a lot of music via spotify uris.  In the menu bar you can 
 
 Written in Swift 4.  Utilizes AppleScript to speak with Spotify, thus permission to do so is necessary on first launch.  App _Should_ support from 10.12+. Permission granting is only necessary on 10.14+ (Mojave).  
 
+## Preferences
+
+SpotStatus can be configured via its preferences panel.
+
+![preferences](./preferences.png)
+
+
+
+## Collaborators
+
+Collaboration/PRs are encouraged!  Thanks to [skypanther](https://github.com/skypanther) for his help so far.  
