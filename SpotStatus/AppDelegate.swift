@@ -101,6 +101,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let button = statusItem.button else {
             return
         }
+        
+        // Apple Script for Current Song
         if let scriptObject = NSAppleScript(source: currentTrackScript) {
             out = scriptObject.executeAndReturnError(&errorDict)
             songName = out?.stringValue ?? ""
@@ -108,14 +110,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let error = errorDict {
             print(error)
         }
-
+        // Apple Script for Current Artist
+        if let scriptObject = NSAppleScript(source: currentArtistScript) {
+            out = scriptObject.executeAndReturnError(&errorDict)
+            artist = out?.stringValue ?? "" // saving this to show in the moreDetail menu item
+            if let error = errorDict {
+                print(error)
+            }
+        }
+        
+        // assume Spotify isn't playing since we got an empty name
         if songName == "" {
-            // assume Spotify isn't playing since we got an empty name
-            button.title = ""
+            button.title = displayName // Show the standby name if we have one. Will be "" otherwise.
             artist = ""
+            if displayName != "" {
+                // We have text to display, so don't display the icon.
+                return
+            }
+            // By default, show the status bar icon.
             button.image = NSImage(named: "StatusBarButtonImage")
             return
         }
+        
+        // At this point, we ARE playing music, and have a song/artist to display!
+
+        button.title = ""
+        button.image = nil
+        
         if showTitleOrArtist == .title {
             // get the song title
             if showArtist {
@@ -130,18 +151,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             // get the artist name
             showTitleOrArtist = .title
-            if let scriptObject = NSAppleScript(source: currentArtistScript) {
-                out = scriptObject.executeAndReturnError(&errorDict)
-                artist = out?.stringValue ?? "" // saving this to show in the moreDetail menu item
-                menuText = artist
-                if let error = errorDict {
-                    print(error)
-                }
-            }
+            menuText = artist
         }
         
-        menuText = displayName + menuText
-
         if menuText != "" {
             button.image = nil
             button.title = menuText
