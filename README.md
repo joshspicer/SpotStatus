@@ -1,6 +1,11 @@
 # SpotStatus
 Spotify Now Playing Menu Bar Utility for MacOS Mojave
 
+# Usage
+You can build the following Xcode project from the source code provided. 
+
+For convenience, i've provided a .zip of the MacOS binary. You can [download release 1.2 here](https://github.com/joshspicer/SpotStatus/releases). 
+
 ## Intro
 There are a lot of good Spotify + menu bar projects that already exist, but many are outdated and few have been updated for OSX Mojave (and its [awesome gatekeeper "features”](https://joshspicer.com/applescript-mojave)).  SpotStatus was build from the ground up specifically for Mojave. 
 
