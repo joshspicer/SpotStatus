@@ -8,6 +8,11 @@
 import Cocoa
 import Foundation
 
+
+enum SongInfoToShow {
+    case title, artist
+}
+
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     
@@ -44,6 +49,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var moreDetail: String!
     var url: String!
     var out: NSAppleEventDescriptor?
+    var showTitleOrArtist: SongInfoToShow = .title
+    var switchCount = 0
+    let refreshInterval = 2.0
+    let switchAfterCount = 3 // show artist every (refreshInterval * switchAfterCount) seconds
     
     var preferences: Preferences!
     
@@ -71,7 +80,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // If there's no spotify running
         if (songName != "") {
-            menu.insertItem(NSMenuItem(title: moreDetail, action: Selector(""), keyEquivalent: ""),at: 0)
+            menu.insertItem(NSMenuItem(title: moreDetail, action: nil, keyEquivalent: ""),at: 0)
             menu.insertItem(NSMenuItem(title: "Share - Song To Clipboard", action: #selector(AppDelegate.shareToClipboard(_:)), keyEquivalent: "P"), at: 1)
 
         }
@@ -81,46 +90,78 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // OnTick.  Reloads the data.
     @objc func reloadSong() {
-        
-        // Get SONG
-        if let scriptObject = NSAppleScript(source: currentTrackScript) {
-            var errorDict: NSDictionary? = nil
-            out = scriptObject.executeAndReturnError(&errorDict)
-            songName = out?.stringValue ?? ""
-            
-            // If we don't have a song, abort this round!
-            // Else place it into the button
-            
-            let defaults = UserDefaults.standard
-            let displayName = defaults.string(forKey: "displayName") ?? "Click To Configure..."
-            
-            if let button = statusItem.button {
-//                button.title = songName
-                button.title = songName == "" ? displayName : songName
-                button.action = #selector(shareToClipboard(_:))
-            }
-            
-            if let error = errorDict {
-                print(error)
-            }
-        }
-        
-        // Check if Spotify is even running...
-        if (songName == "") {
+        let defaults = UserDefaults.standard
+        let displayName = defaults.string(forKey: "displayName") ?? ""
+        let showArtist = defaults.bool(forKey: "showArtist")
+        let cleanSongTitle = defaults.bool(forKey: "cleanSongTitle")
+        var artist = ""
+        var menuText = ""
+        var errorDict: NSDictionary? = nil
+
+        guard let button = statusItem.button else {
             return
         }
         
-        // Get ARTIST (more details)
-        if let scriptObject = NSAppleScript(source: currentArtistScript) {
-            var errorDict: NSDictionary? = nil
+        // Apple Script for Current Song
+        if let scriptObject = NSAppleScript(source: currentTrackScript) {
             out = scriptObject.executeAndReturnError(&errorDict)
-            let artist = out?.stringValue ?? ""
-            moreDetail = songName + " by " + artist
-            
+            songName = out?.stringValue ?? ""
+        }
+        if let error = errorDict {
+            print(error)
+        }
+        // Apple Script for Current Artist
+        if let scriptObject = NSAppleScript(source: currentArtistScript) {
+            out = scriptObject.executeAndReturnError(&errorDict)
+            artist = out?.stringValue ?? "" // saving this to show in the moreDetail menu item
             if let error = errorDict {
                 print(error)
             }
         }
+        
+        // assume Spotify isn't playing since we got an empty name
+        if songName == "" {
+            button.title = displayName // Show the standby name if we have one. Will be "" otherwise.
+            artist = ""
+            if displayName != "" {
+                // We have text to display, so don't display the icon.
+                return
+            }
+            // By default, show the status bar icon.
+            button.image = NSImage(named: "StatusBarButtonImage")
+            return
+        }
+        
+        // At this point, we ARE playing music, and have a song/artist to display!
+
+        button.title = ""
+        button.image = nil
+        
+        if showTitleOrArtist == .title {
+            // get the song title
+            if showArtist {
+                // if the user wants to show the artist, track when to show it
+                switchCount += 1
+                if switchCount > switchAfterCount {
+                    showTitleOrArtist = .artist
+                    switchCount = 0
+                }
+            }
+            menuText = cleanSongTitle ? doCleanSongTitle(songName) : songName
+        } else {
+            // get the artist name
+            showTitleOrArtist = .title
+            menuText = artist
+        }
+        
+        if menuText != "" {
+            button.image = nil
+            button.title = menuText
+            button.action = #selector(shareToClipboard(_:))
+        }
+        
+        // populate the more detail menu item
+        moreDetail = songName + " by " + artist
         
         // Run these again to refresh the data.
         trackURL()
@@ -150,6 +191,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     }
     
+    /**
+     doCleanSongTitle -- removes " - Remastered" portions of song titles
+     Many titles end with " - Remastered" or " - ##th Anniversary" etc. This gets
+     rid of that portion of the name so that the title fits better on the menu bar.
+    */
+    fileprivate func doCleanSongTitle(_ songName: String) -> String {
+        let pattern = " - "
+        let components = songName.components(separatedBy: pattern)
+        return components[0]
+    }
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         reloadSong()
@@ -158,7 +210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
 
         
-        var refreshTimer = Timer.scheduledTimer(timeInterval: 2.0, target: self, selector: #selector(AppDelegate.reloadSong), userInfo: nil, repeats: true)
+        var _ = Timer.scheduledTimer(timeInterval: refreshInterval, target: self, selector: #selector(AppDelegate.reloadSong), userInfo: nil, repeats: true)
         
     }
     

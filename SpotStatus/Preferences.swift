@@ -14,9 +14,10 @@ protocol PreferencesWindowDelegate {
 
 class Preferences: NSWindowController, NSWindowDelegate {
     
- 
-    
     @IBOutlet weak var displayText: NSTextField!
+    @IBOutlet weak var cleanSongTitle: NSButton!
+    @IBOutlet weak var showArtist: NSButton!
+    
     var delegate: PreferencesWindowDelegate?
 
     
@@ -36,6 +37,8 @@ class Preferences: NSWindowController, NSWindowDelegate {
         let defaults = UserDefaults.standard
         
         defaults.setValue(displayText.stringValue, forKey: "displayName")
+        defaults.setValue(cleanSongTitle.state == .on, forKey: "cleanSongTitle")
+        defaults.setValue(showArtist.state == .on, forKey: "showArtist")
         delegate?.preferencesDidUpdate()
 
     }
