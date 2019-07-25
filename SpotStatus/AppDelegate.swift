@@ -44,8 +44,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     """
     
     
-    let statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
+    var statusItem: NSStatusItem?
     var songName: String!
+    var previousSongName = ""
     var moreDetail: String!
     var url: String!
     var out: NSAppleEventDescriptor?
@@ -72,6 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // Generates the dropdown menu
     func constructMenu() {
+        
         let menu = NSMenu()
         
         menu.addItem(NSMenuItem.separator())
@@ -85,7 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         }
         
-        statusItem.menu = menu
+        statusItem?.menu = menu
     }
     
     // OnTick.  Reloads the data.
@@ -98,10 +100,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var menuText = ""
         var errorDict: NSDictionary? = nil
 
-        guard let button = statusItem.button else {
-            return
-        }
-        
         // Apple Script for Current Song
         if let scriptObject = NSAppleScript(source: currentTrackScript) {
             out = scriptObject.executeAndReturnError(&errorDict)
@@ -110,6 +108,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let error = errorDict {
             print(error)
         }
+        
+        if songName != previousSongName {
+            // song has changed, remove then re-add SpotStatus to the menu
+            removeStatusItem()
+            previousSongName = songName
+        }
+        
         // Apple Script for Current Artist
         if let scriptObject = NSAppleScript(source: currentArtistScript) {
             out = scriptObject.executeAndReturnError(&errorDict)
@@ -117,6 +122,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let error = errorDict {
                 print(error)
             }
+        }
+        
+        if statusItem == nil {
+            statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
+        }
+        guard let button = statusItem?.button else {
+            return
         }
         
         // assume Spotify isn't playing since we got an empty name
@@ -201,14 +213,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let components = songName.components(separatedBy: pattern)
         return components[0]
     }
+
+    /**
+     Remove the status item (the SpotStatus button) from the system menu bar
+
+     There's no documented way to force a menu item to always be in a specific position
+     on the system menu bar. Newly added items are added as the left-most item, which is
+     where we want SpotStatus to remain. So, we will remove it, and re-add it every time
+     the song changes. Called from reloadSong()
+     */
+    fileprivate func removeStatusItem() {
+        guard let statusItem = statusItem else {
+            return
+        }
+        NSStatusBar.system.removeStatusItem(statusItem)
+        self.statusItem = nil
+    }
     
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         reloadSong()
         preferences = Preferences()
         constructMenu()
-        
-
         
         var _ = Timer.scheduledTimer(timeInterval: refreshInterval, target: self, selector: #selector(AppDelegate.reloadSong), userInfo: nil, repeats: true)
         
