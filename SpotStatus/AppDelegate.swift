@@ -121,15 +121,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // assume Spotify isn't playing since we got an empty name
         if songName == "" {
-            button.title = displayName // Show the standby name if we have one. Will be "" otherwise.
             artist = ""
-            if displayName != "" {
-                // We have text to display, so don't display the icon.
+            if displayName == "" {
+                // By default, show the status bar icon.
+                button.title = ""
+                button.image = NSImage(named: "StatusBarButtonImage")
                 return
             }
-            // By default, show the status bar icon.
-            button.image = NSImage(named: "StatusBarButtonImage")
-            return
+            button.title = displayName // Show the standby name if we have one. Will be "" otherwise.
         }
         
         // At this point, we ARE playing music, and have a song/artist to display!
