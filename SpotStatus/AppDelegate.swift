@@ -31,16 +31,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     """
     
     let currentArtistScript = """
-    tell application "Spotify"
-        return artist of current track
-    end tell
+    if application "Spotify" is running then
+        tell application "Spotify"
+            return artist of current track
+        end tell
+    else
+        return ""
+    end if
     """
     
     let songURLScript = """
-    tell application "Spotify"
-        return spotify url of current track
-    end tell
-        
+    if application "Spotify" is running then
+        tell application "Spotify"
+            return spotify url of current track
+        end tell
+    else
+        return ""
+    end if
+
     """
     
     
