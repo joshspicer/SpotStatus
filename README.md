@@ -16,12 +16,15 @@ For convenience, i've provided a .zip of the MacOS binary. You can [download rel
 
 SpotStatus will open in the menu bar. Click on the icon to configure!
 
-### Download Hash
+### Hash
 
 If you get SpotStatus.app from elsewhere, confirm the hash as what is listed on the [relevant release](https://github.com/joshspicer/SpotStatus/releases). 
 
 `$ shasum -a 256 /Applications/SpotStatus.app/Contents/MacOS/SpotStatus`
 
+## Tips
+
+On MacOS you can drag around menu items by holding down COMMAND and dragging elements left and right.  You can use this to reposition SpotStatus with other items on your menu bar. 
 
 ## Intro
 There are a lot of good Spotify + menu bar projects that already exist, but many are outdated and few have been updated for OSX Mojave (and its [awesome gatekeeper "features”](https://joshspicer.com/applescript-mojave)).  SpotStatus was build from the ground up specifically for Mojave. 
