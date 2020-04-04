@@ -51,7 +51,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     """
     
-    
     let statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
     var songName: String!
     var moreDetail: String!
@@ -63,7 +62,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let switchAfterCount = 3 // show artist every (refreshInterval * switchAfterCount) seconds
     
     var preferences: Preferences!
-    
     
     // Used to place something onto the user's clipboard
     @objc func shareToClipboard(_ sender: Any?) {
@@ -86,13 +84,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Preferences", action: #selector(showPrefs(_:)), keyEquivalent: "m"))
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         
-        // If there's no spotify running
+        // If a song is playing
         if (songName != "") {
             menu.insertItem(NSMenuItem(title: moreDetail, action: nil, keyEquivalent: ""),at: 0)
             menu.insertItem(NSMenuItem(title: "Share - Song To Clipboard", action: #selector(AppDelegate.shareToClipboard(_:)), keyEquivalent: "P"), at: 1)
-
         }
-        
+        // Set the new menu
         statusItem.menu = menu
     }
     
@@ -105,7 +102,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var artist = ""
         var menuText = ""
         var errorDict: NSDictionary? = nil
-
+        
         guard let button = statusItem.button else {
             return
         }
@@ -118,6 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let error = errorDict {
             print(error)
         }
+        
         // Apple Script for Current Artist
         if let scriptObject = NSAppleScript(source: currentArtistScript) {
             out = scriptObject.executeAndReturnError(&errorDict)
@@ -134,13 +132,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 // By default, show the status bar icon.
                 button.title = ""
                 button.image = NSImage(named: "StatusBarButtonImage")
-                return
+            } else {
+                // Show the standby name if we have one. Will be "" otherwise.
+                button.title = displayName
+                button.image = nil
             }
-            button.title = displayName // Show the standby name if we have one. Will be "" otherwise.
+            
+            // Nothing else to do.
+            return
         }
         
         // At this point, we ARE playing music, and have a song/artist to display!
-
+        
         button.title = ""
         button.image = nil
         
@@ -186,7 +189,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 print(error)
             }
         }
-        let tmpUrl = out?.stringValue ?? "No URL" //will get "spotify:track:3O8AgNdf569SM1tcUA4xnK"
+        
+        let tmpUrl = out?.stringValue ?? "" //will get "spotify:track:3O8AgNdf569SM1tcUA4xnK"
+        if tmpUrl == "" {
+            url = ""
+            return
+        }
+        
         // Make it match: https://open.spotify.com/track/3O8AgNdf569SM1tcUA4xnK
         let splitUrl = tmpUrl.components(separatedBy: ":")
         url = "https://open.spotify.com/track/" + splitUrl[2]
@@ -195,18 +204,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func showPrefs(_ sender: NSMenuItem) {
         //Here I call the title of the Menu Item pressed
         preferences.showWindow(nil)
-
+        
     }
     
     /**
      doCleanSongTitle -- removes " - Remastered" portions of song titles
      Many titles end with " - Remastered" or " - ##th Anniversary" etc. This gets
      rid of that portion of the name so that the title fits better on the menu bar.
-    */
+     
+     Added:  (
+     For some reason I couldn't get this regex to work: (.*)( )[-(].*
+     */
     fileprivate func doCleanSongTitle(_ songName: String) -> String {
-        let pattern = " - "
-        let components = songName.components(separatedBy: pattern)
-        return components[0]
+        
+        let pattern01 = " - "
+        let pattern02 = " ("
+        let components = songName.components(separatedBy: pattern01)
+        if let str = components.first {
+            return str.components(separatedBy: pattern02)[0]
+        }
+        // Error
+        return ""
     }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -215,14 +233,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         preferences = Preferences()
         constructMenu()
         
-
-        
         var _ = Timer.scheduledTimer(timeInterval: refreshInterval, target: self, selector: #selector(AppDelegate.reloadSong), userInfo: nil, repeats: true)
-        
     }
     
-    func applicationWillTerminate(_ aNotification: Notification) {
-    }
-    
+    func applicationWillTerminate(_ aNotification: Notification) { }
 }
 
