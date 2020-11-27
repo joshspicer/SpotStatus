@@ -1,7 +1,9 @@
 # SpotStatus
-Spotify Now Playing Menu Bar Utility for OSX Mojave and Catalina
+Spotify Now Playing Menu Bar Utility for OSX Mojave, Catalina, and Big Sur
 
-SpotStatus was last built and tested on MacOS 10.15.4
+~SpotStatus was last built and tested on MacOS 10.15.4~
+
+SpotStatus has been tested on MacOS 11.0.1.
 
 # Usage
 You can build the following Xcode project from the source code provided. Note that with Mac OS Catalina you may need to [notarize](https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution) your build before using.
