@@ -1,13 +1,5 @@
-//
-//  AppDelegate.swift
-//  SpotStatus
-//
-//  Created by Josh Spicer <https://joshspicer.com/>. (c) 2019 - All rights reserved.
-//
-
 import Cocoa
 import Foundation
-
 
 enum SongInfoToShow {
     case title, artist
@@ -51,6 +43,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     """
     
+    let playPauseScript = """
+    if application "Spotify" is running then
+        tell application "Spotify"
+            playpause
+        end tell
+    end if
+    """
+    
     let statusItem = NSStatusBar.system.statusItem(withLength:NSStatusItem.variableLength)
     var songName: String!
     var moreDetail: String!
@@ -76,10 +76,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         pasteboard.setString(url, forType: NSPasteboard.PasteboardType.string)
     }
     
+    @objc func playPauseSong(_ sender: Any?) {
+        if let scriptObject = NSAppleScript(source: playPauseScript) {
+            var errorDict: NSDictionary? = nil
+            scriptObject.executeAndReturnError(&errorDict)
+            if let error = errorDict {
+                print(error)
+            }
+        }
+    }
+    
     // Generates the dropdown menu
     func constructMenu() {
         let menu = NSMenu()
         
+        menu.addItem(NSMenuItem(title: "Play/Pause", action: #selector(playPauseSong(_:)), keyEquivalent: "p"))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Preferences", action: #selector(showPrefs(_:)), keyEquivalent: "m"))
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
@@ -238,4 +249,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationWillTerminate(_ aNotification: Notification) { }
 }
-
